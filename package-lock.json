@@ -1,0 +1,45 @@
+// ============================================================
+// VORTEX AI — Firestore Security Rules
+// Deploy via: firebase deploy --only firestore:rules
+// ============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Leads collection ────────────────────────────────────
+    // n8n agents write, dashboard reads
+    match /leads/{leadId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // ── Users collection ────────────────────────────────────
+    // Agent 1 writes Activity Atoms
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // ── Product Intelligence ─────────────────────────────────
+    // Agent 6 writes every 6h, dashboard reads
+    match /product_intelligence/{docId} {
+      allow read: if true; // Public read for dashboard
+      allow write: if request.auth != null;
+    }
+
+    // ── Activity Feed ────────────────────────────────────────
+    // Agents append events, dashboard reads in real-time
+    match /activity_feed/{eventId} {
+      allow read: if true;
+      allow create: if true; // Agents write without auth in dev
+      allow update, delete: if request.auth != null;
+    }
+
+    // ── Agent Logs (Debate Log) ──────────────────────────────
+    match /agent_logs/{leadId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}

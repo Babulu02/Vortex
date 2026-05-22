@@ -1,0 +1,32 @@
+# ============================================================
+# VORTEX AI — Environment Variables
+# Copy this file to .env and fill in your values
+# NEVER commit .env to version control
+# ============================================================
+
+# ── n8n Cloud ──────────────────────────────────────────────
+# Your n8n cloud instance webhook URLs
+# Get these from: n8n → Workflows → Webhook node → Production URL
+VITE_N8N_WEBHOOK_URL=https://your-instance.app.n8n.cloud/webhook/vortex-event
+VITE_N8N_VAPI_URL=https://your-instance.app.n8n.cloud/webhook/vapi-outcome
+
+# ── Firebase ───────────────────────────────────────────────
+# Get from: Firebase Console → Project Settings → Web App
+VITE_FIREBASE_API_KEY=your_api_key_here
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+
+# ── Demo Mode ──────────────────────────────────────────────
+# Set to 'false' to use live Firebase data instead of seed data
+VITE_USE_DEMO_DATA=true
+
+# ── n8n Environment Variables (set inside n8n, not here) ──
+# FIREBASE_PROJECT_ID=your-project-id
+# GROQ_API_KEY=your_groq_key
+# VAPI_API_KEY=your_vapi_key
+# VAPI_PHONE_NUMBER_ID=your_phone_id
+# SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
+# PRODUCT_NAME=VortexAI

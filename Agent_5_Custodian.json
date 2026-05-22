@@ -1,0 +1,105 @@
+import { useState } from 'react';
+import { Play, Loader, CheckCircle } from 'lucide-react';
+import { triggerDemoEvent } from '../../config/n8n';
+
+const DEMO_LEAD = {
+  id: `demo_${Date.now()}`,
+  name: 'Sameer Reddy',
+  email: 'vediums@gmail.com',
+  company: 'ABT technologies',
+  company_size: '50-200',
+  tier: 'POWER_USER',
+  intent_score: 92,
+  urgency: 'HIGH',
+  status: 'HOT_LEAD',
+  event_type: 'api_limit_hit',
+  feature: 'Data Export API',
+  session_mins: 120,
+  teammates_invited: 3,
+  api_calls_today: 98,
+  signals: ['URGENCY', 'GROWTH_PRESSURE', 'USAGE_LIMIT'],
+  email_status: 'PENDING',
+  email_draft: {
+    subject: "You hit the Data Export limit — here's how to unblock your team",
+    body: "Hey Sameer, Noticed ABT technologies hit the API export ceiling...",
+    sales_contact_note: 'High urgency, low sales resistance expected.',
+  },
+  processed_at: new Date().toISOString(),
+  isDemo: true,
+};
+
+export default function DemoButton({ onDemoStep }) {
+  const [state, setState] = useState('idle');
+  const [toast, setToast] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+
+  const runDemo = async () => {
+    if (state !== 'idle') return;
+    setState('running');
+    const start = Date.now();
+
+    // TRIGGER THE ACTUAL n8n WEBHOOK
+    triggerDemoEvent().catch(err => console.error('[n8n] Failed to fire event:', err));
+
+    const steps = [
+      { delay: 200,  fn: () => onDemoStep('feed', { id: `d${Date.now()}`, agent: 1, agentName: 'Behavioral Scout', timestamp: new Date().toISOString(), action: 'api_limit_hit captured — vediums@gmail.com', detail: 'Data Export API · Session 120min' }) },
+      { delay: 800,  fn: () => onDemoStep('agent', { id: 1 }) },
+      { delay: 1200, fn: () => onDemoStep('feed', { id: `d${Date.now()}`, agent: 2, agentName: 'Intent Architect', timestamp: new Date().toISOString(), action: 'Classifying intent via Groq llama3-70b...', detail: 'Processing behavioral signals' }) },
+      { delay: 2000, fn: () => { onDemoStep('agent', { id: 2 }); onDemoStep('feed', { id: `d${Date.now()}`, agent: 2, agentName: 'Intent Architect', timestamp: new Date().toISOString(), action: 'POWER_USER · Score 92/100 · HIGH urgency', detail: 'ABT technologies · USAGE_LIMIT pain' }); }},     
+      { delay: 2500, fn: () => { onDemoStep('agent', { id: 3 }); onDemoStep('feed', { id: `d${Date.now()}`, agent: 3, agentName: 'Persona Scriptwriter', timestamp: new Date().toISOString(), action: 'Drafting personalized email via Groq...', detail: 'Referencing api_limit_hit context' }); }},    
+      { delay: 3200, fn: () => onDemoStep('feed', { id: `d${Date.now()}`, agent: 3, agentName: 'Persona Scriptwriter', timestamp: new Date().toISOString(), action: 'Email drafted for Sameer Reddy', detail: "You hit the Data Export limit..." }) },
+      { delay: 3800, fn: () => onDemoStep('agent', { id: 7 }) },
+      { delay: 4200, fn: () => onDemoStep('feed', { id: `d${Date.now()}`, agent: 7, agentName: 'Exec Router', timestamp: new Date().toISOString(), action: 'HOT_LEAD decision: Slack + Email queued', detail: 'Score 92 · Slack fired to #sales' }) },
+      { delay: 4500, fn: () => onDemoStep('lead', { ...DEMO_LEAD, id: `demo_${Date.now()}` }) },
+      { delay: 5500, fn: () => { setElapsed(Math.round((Date.now() - start) / 100) / 10); setState('done'); setToast(true); setTimeout(() => { setToast(false); setTimeout(() => setState('idle'), 500); }, 3500); }},
+    ];
+
+    steps.forEach(({ delay, fn }) => setTimeout(fn, delay));
+  };
+
+  const Icon = state === 'running' ? Loader : state === 'done' ? CheckCircle : Play;
+  const label = state === 'running' ? 'RUNNING...' : state === 'done' ? 'COMPLETE' : 'TRIGGER DEMO';
+  const bg = state === 'done' ? '#22c55e' : '#facc15';
+
+  return (
+    <>
+      {toast && (
+        <div style={{
+          position: 'fixed', top: 60, right: 20, zIndex: 10000,
+          background: '#0f1117', border: '1px solid #22c55e',
+          borderLeft: '4px solid #22c55e',
+          padding: '10px 16px',
+          display: 'flex', alignItems: 'center', gap: 10,
+          animation: 'feedIn 300ms ease-out',
+        }}>
+          <CheckCircle size={14} color="#22c55e" />
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#22c55e', fontFamily: "'IBM Plex Mono', monospace" }}>PIPELINE COMPLETE</div>      
+            <div style={{ fontSize: 10, color: '#475569', fontFamily: "'IBM Plex Mono', monospace" }}>{elapsed}s end-to-end · n8n webhook fired</div> 
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={runDemo}
+        style={{
+          position: 'fixed', bottom: 60, right: 20, zIndex: 9999,
+          background: bg, border: 'none',
+          padding: '12px 20px', borderRadius: 8,
+          display: 'flex', alignItems: 'center', gap: 8,
+          cursor: state === 'running' ? 'wait' : 'pointer',
+          boxShadow: `0 4px 12px rgba(0,0,0,0.5)`,
+          transition: 'all 100ms',
+          color: '#0f1117'
+        }}
+        onMouseEnter={e => { if (state === 'idle') e.currentTarget.style.transform = 'translateY(-2px)'; }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
+      >
+        <Icon size={14} style={state === 'running' ? { animation: 'spin 1s linear infinite' } : {}} />
+        <span style={{ fontSize: 12, fontWeight: 800, fontFamily: "'IBM Plex Mono', monospace", letterSpacing: '0.08em' }}>       
+          {label}
+        </span>
+      </button>
+    </>
+  );
+}
